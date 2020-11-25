@@ -1,0 +1,24 @@
+name: Sign
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Do the needful
+        env: 
+          codesign_cert: ${{ secrets.CODESIGN_CERT }}
+          codesign_cert_password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
+        run: |
+          [IO.File]::WriteAllBytes(codesign_cert.pfx, [Convert]::FromBase64String($env:codesign_cert))
+          .\signtool.exe sign /fd sha256 /tr http://ts.ssl.com /td sha256 /f ".\MyCertificate.pfx" /p $env:codesign_cert_password "ajour.exe"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ajour
+          path: ajour.exe
